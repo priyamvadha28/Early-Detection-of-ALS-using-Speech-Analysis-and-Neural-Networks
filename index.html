@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech Analysis and Visualization of Voice Samples to Detect ALS</title>
+    <style>
+        /* Reset margins and paddings */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Body Styling */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f4f8;
+        }
+
+        /* Top Navigation Bar */
+        .navbar {
+            background-color: #4A47A3;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+
+        .navbar h1 {
+            margin-left: 20px;
+        }
+
+        .navbar .nav-buttons {
+            display: flex;
+        }
+
+        .navbar .nav-buttons button {
+            background-color: #ffffff;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            margin-right: 10px;
+            color: #4A47A3;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .navbar .nav-buttons button:hover {
+            background-color: #716bb8;
+            color: white;
+        }
+
+        /* Drag Shadow Section */
+        .drag-shadow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color: #716bb8;
+            color: white;
+            padding: 40px;
+            border-radius: 15px;
+            margin: 30px auto;
+            width: 60%;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .drag-shadow h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .drag-shadow .check-btn {
+            background-color: #ffffff;
+            border: none;
+            border-radius: 20px;
+            color: #4A47A3;
+            font-weight: bold;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .drag-shadow .check-btn:hover {
+            background-color: #4A47A3;
+            color: white;
+        }
+
+        /* Main Content */
+        .container {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .upload-section {
+            background-color: #716bb8;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            color: white;
+            width: 60%;
+            text-align: center;
+        }
+
+        .upload-section h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .upload-section input[type="file"] {
+            padding: 15px;
+            border: 2px dashed #ffffff;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2em;
+            background-color: transparent;
+            color: white;
+            width: 100%;
+        }
+
+        /* Spectrogram Display */
+        #spectrogramCanvas {
+            margin-top: 20px;
+            border: 1px solid #4A47A3;
+            border-radius: 8px;
+            display: none;
+        }
+
+        /* Download Button */
+        #downloadBtn {
+            display: none;
+            margin-top: 20px;
+            background-color: #4A47A3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+
+        #downloadBtn:hover {
+            background-color: #716bb8;
+        }
+
+        /* Action Buttons */
+        .actions {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .actions button {
+            background-color: #4A47A3;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 0 10px;
+            transition: background-color 0.3s;
+        }
+
+        .actions button:hover {
+            background-color: #716bb8;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #4A47A3;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            border-radius: 10px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <div class="navbar">
+        <h1>Speech Analysis for ALS Detection</h1>
+        <div class="nav-buttons">
+            <button onclick="showAbout()">About</button>
+            <button onclick="showAwareness()">ALS Awareness</button>
+            <button onclick="showContact()">Contact Us</button>
+        </div>
+    </div>
+
+    <!-- Drag Shadow Section -->
+    <div class="drag-shadow">
+        <h2>Your Health Matters—Take the First Step</h2>
+        <button class="check-btn" onclick="showUploadSection()">Get yourself checked Today!</button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container" id="uploadContainer">
+        <div class="upload-section">
+            <h2>Upload Your Audio File</h2>
+            <input type="file" id="audioFile" accept=".wav" />
+            <audio id="audioPlayer" controls style="margin-top: 20px; width: 100%;"></audio>
+            <div class="output" id="output" style="margin-top: 20px;">Awaiting file input and action...</div>
+            <canvas id="spectrogramCanvas"></canvas>
+            <button id="downloadBtn">Download Spectrogram</button>
+        </div>
+
+        <!-- Action Buttons Below the Upload Section -->
+        <div class="actions">
+            <button onclick="generateSpectrogram()">Generate Spectrogram</button>
+            <button onclick="analyzeFeatures()">Analyze Acoustic Features</button>
+            <button onclick="runModel()">Run ALS Detection Model</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2024 Speech Analysis for ALS Detection</p>
+    </footer>
+
+    <!-- Modal for displaying information -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        const audioFileInput = document.getElementById('audioFile');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const outputDiv = document.getElementById('output');
+        const uploadContainer = document.getElementById('uploadContainer');
+        const spectrogramCanvas = document.getElementById('spectrogramCanvas');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const modal = document.getElementById("myModal");
+        const modalBody = document.getElementById("modal-body");
+        let selectedFile = null;
+
+        function showUploadSection() {
+            document.querySelector('.drag-shadow').style.display = 'none';
+            uploadContainer.style.display = 'flex';
+        }
+
+        // Load selected file into audio player
+        audioFileInput.addEventListener('change', (event) => {
+            selectedFile = event.target.files[0];
+            if (selectedFile) {
+                const objectURL = URL.createObjectURL(selectedFile);
+                audioPlayer.src = objectURL;
+                outputDiv.innerHTML = "Audio file loaded. Choose an action.";
+            }
+        });
+
+        function generateSpectrogram() {
+    if (selectedFile) {
+        const outputDiv = document.getElementById('output');
+        outputDiv.innerHTML = "Generating Spectrogram...";
+
+        const formData = new FormData();
+        formData.append('audio_file', selectedFile);
+
+        fetch('/generate_spectrogram', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.blob())
+        .then(blob => {
+            const img = new Image();
+            const canvas = document.getElementById('spectrogramCanvas');
+            const ctx = canvas.getContext('2d');
+
+            img.onload = () => {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+
+                // Show canvas and display download button
+                canvas.style.display = 'block';
+                document.getElementById('downloadBtn').style.display = 'inline-block';
+                
+                // Set up the download button
+                downloadBtn.onclick = function() {
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = 'spectrogram.png';
+                    a.click();
+                };
+
+                outputDiv.innerHTML = "Spectrogram Generated!";
+            };
+            img.src = URL.createObjectURL(blob);
+        })
+        .catch(error => {
+            console.error('Error generating spectrogram:', error);
+            outputDiv.innerHTML = "Error generating spectrogram!";
+        });
+    } else {
+        alert("Please upload an audio file first!");
+    }
+}
+
+        // Example Acoustic Features
+        function analyzeFeatures() {
+            if (selectedFile) {
+                outputDiv.innerHTML = "Analyzing Acoustic Features...";
+                // Add your acoustic feature extraction code here
+                // For now, let's simulate the features with some example output
+                outputDiv.innerHTML = `
+                    F0: 120 Hz<br>
+                    Jitter: 0.002<br>
+                    Shimmer: 0.004<br>
+                    HNR: 17 dB<br>
+                `;
+            } else {
+                alert("Please upload an audio file first!");
+            }
+        }
+
+        // ALS Detection Model
+        function runModel() {
+            if (selectedFile) {
+                outputDiv.innerHTML = "Running ALS Detection Model...";
+                // Example detection logic here
+                // Simulate the model's output
+                setTimeout(() => {
+                    const result = Math.random() > 0.5 ? "Healthy" : "ALS Detected";
+                    outputDiv.innerHTML = `Result: ${result}`;
+                }, 2000);
+            } else {
+                alert("Please upload an audio file first!");
+            }
+        }
+
+        // Function to show modal with content from external HTML files
+        function showAbout() {
+            fetch('C:\Users\Priyamvadha Pradeep\Desktop\FYP\Frontend\templates\about.html')
+                .then(response => response.text())
+                .then(data => {
+                    modalBody.innerHTML = data;
+                    modal.style.display = "block";
+                })
+                .catch(error => {
+                    console.error("Error fetching About page:", error);
+                    modalBody.innerHTML = "<p>Failed to load About page. Please try again later.</p>";
+                    modal.style.display = "block";
+                });
+        }
+
+        function showAwareness() {
+            fetch('C:\Users\Priyamvadha Pradeep\Desktop\FYP\Frontend\templates\als_awareness.html')
+                .then(response => response.text())
+                .then(data => {
+                    modalBody.innerHTML = data;
+                    modal.style.display = "block";
+                })
+                .catch(error => {
+                    console.error("Error fetching Awareness page:", error);
+                    modalBody.innerHTML = "<p>Failed to load Awareness page. Please try again later.</p>";
+                    modal.style.display = "block";
+                });
+        }
+
+        function showContact() {
+            fetch('C:\Users\Priyamvadha Pradeep\Desktop\FYP\Frontend\templates\contact.html')
+                .then(response => response.text())
+                .then(data => {
+                    modalBody.innerHTML = data;
+                    modal.style.display = "block";
+                })
+                .catch(error => {
+                    console.error("Error fetching Contact page:", error);
+                    modalBody.innerHTML = "<p>Failed to load Contact page. Please try again later.</p>";
+                    modal.style.display = "block";
+                });
+        }
+
+        function closeModal() {
+            modal.style.display = "none";
+        }
+
+        window.onclick = function (event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+
+</body>
+</html>
